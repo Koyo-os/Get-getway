@@ -1,0 +1,63 @@
+syntax = "proto3";
+
+option go_package = "./pkg/api/protobuf/form";
+
+message Question{
+    string Content = 1;
+    string OrderNumber = 2;
+}
+
+message Form{
+    string ID = 1;
+    string Title = 2;
+    repeated Question Questions = 3;
+    bool Closed = 4;
+    string AuthorID = 5;
+    string CreatedAt = 6; 
+}
+
+message RequestGet{
+    string ID = 1;
+}
+
+message RequestUpdate{
+    string ID = 1;
+    string Key = 2;
+    string Value = 3;
+}
+
+message Response{
+    string error = 1;
+    bool ok = 2;
+}
+
+message RequestDelete{
+    string ID = 1;
+}
+
+message RequestCreate{
+    Form Form = 1;
+}
+
+message RequestGetMore{
+    string Key = 1;
+    string Value = 2;
+}
+
+message GetResponse{
+    Response Response = 1;
+    Form Form = 2;
+}
+
+message GetMoreResponse{
+    Response Response = 1;
+    repeated Form Forms = 2;
+}
+
+service FormService{
+    rpc Get (RequestGet) returns (GetResponse);
+    rpc GetMore (RequestGetMore) returns (GetMoreResponse);
+    rpc Update (RequestUpdate) returns (Response);
+    rpc Delete (RequestDelete) returns (Response);
+    rpc Create (RequestCreate) returns (Response);
+}
