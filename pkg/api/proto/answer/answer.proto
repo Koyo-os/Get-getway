@@ -1,0 +1,61 @@
+syntax = "proto3";
+
+option go_package = "./pkg/api/protobuf/answer";
+
+message Question{
+    string Content = 1;
+    uint64 OrderNumber = 2;
+}
+
+message Answer{
+    string ID = 1;
+    repeated Question Questions = 3;
+    string UserID = 5;
+    string CreatedAt = 6; 
+}
+
+message RequestGet{
+    string ID = 1;
+}
+
+message RequestUpdate{
+    string ID = 1;
+    string Key = 2;
+    string Value = 3;
+}
+
+message Response{
+    string error = 1;
+    bool ok = 2;
+}
+
+message RequestDelete{
+    string ID = 1;
+}
+
+message RequestCreate{
+    Answer Answer = 1;
+}
+
+message RequestGetMore{
+    string Key = 1;
+    string Value = 2;
+}
+
+message GetResponse{
+    Response Response = 1;
+    Answer Answer = 2;
+}
+
+message GetMoreResponse{
+    Response Response = 1;
+    repeated Answer Answer = 2;
+}
+
+service AnswerService{
+    rpc Get (RequestGet) returns (GetResponse);
+    rpc GetMore (RequestGetMore) returns (GetMoreResponse);
+    rpc Update (RequestUpdate) returns (Response);
+    rpc Delete (RequestDelete) returns (Response);
+    rpc Create (RequestCreate) returns (Response);
+}
