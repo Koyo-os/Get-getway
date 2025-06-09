@@ -1,0 +1,57 @@
+syntax = "proto3";
+
+option go_package = "./pkg/api/protobuf/poll";
+
+message Form{
+    string ID = 1;
+    string PollID = 2;
+    uint64 FieldID = 3;
+    bool Anonim = 4;
+    string UserID = 5; 
+}
+
+message RequestGet{
+    string ID = 1;
+}
+
+message RequestUpdate{
+    string ID = 1;
+    string Key = 2;
+    string Value = 3;
+}
+
+message Response{
+    string error = 1;
+    bool ok = 2;
+}
+
+message RequestDelete{
+    string ID = 1;
+}
+
+message RequestCreate{
+    Form Form = 1;
+}
+
+message RequestGetMore{
+    string Key = 1;
+    string Value = 2;
+}
+
+message GetResponse{
+    Response Response = 1;
+    Form Form = 2;
+}
+
+message GetMoreResponse{
+    Response Response = 1;
+    repeated Form Forms = 2;
+}
+
+service PollService{
+    rpc Get (RequestGet) returns (GetResponse);
+    rpc GetMore (RequestGetMore) returns (GetMoreResponse);
+    rpc Update (RequestUpdate) returns (Response);
+    rpc Delete (RequestDelete) returns (Response);
+    rpc Create (RequestCreate) returns (Response);
+}
