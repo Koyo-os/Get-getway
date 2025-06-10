@@ -12,6 +12,7 @@ message Answer{
     repeated Question Questions = 3;
     string UserID = 5;
     string CreatedAt = 6; 
+    string FormID = 7;
 }
 
 message RequestGet{
@@ -49,7 +50,7 @@ message GetResponse{
 
 message GetMoreResponse{
     Response Response = 1;
-    repeated Answer Answer = 2;
+    repeated Answer Answers = 2;
 }
 
 service AnswerService{
