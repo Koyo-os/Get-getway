@@ -1,0 +1,29 @@
+syntax = "proto3";
+
+option go_package = "./pkg/api/protobuf/get";
+
+message GetRequest{
+    string EntityName = 1;
+    string Payload = 2;
+    string GetType = 3;
+}
+
+message Response{
+    string error = 1;
+    bool ok = 2;
+}
+
+message GetResponse{
+    repeated string Entities = 1;
+    Response response = 2;    
+}
+
+message GetRealTimeRequest{
+    string EntityName = 1;
+    string Payload = 2;
+}
+
+service GetService{
+    rpc Get (GetRequest) returns (GetResponse);
+    rpc GetRealTime (GetRealTimeRequest) returns (stream GetResponse);
+}
