@@ -4,7 +4,7 @@ option go_package = "./pkg/api/protobuf/form";
 
 message Question{
     string Content = 1;
-    string OrderNumber = 2;
+    uint32 OrderNumber = 2;
 }
 
 message Form{
@@ -12,6 +12,7 @@ message Form{
     string Title = 2;
     repeated Question Questions = 3;
     bool Closed = 4;
+    string Description = 7;
     string AuthorID = 5;
     string CreatedAt = 6; 
 }
