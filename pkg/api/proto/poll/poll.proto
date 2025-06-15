@@ -2,12 +2,25 @@ syntax = "proto3";
 
 option go_package = "./pkg/api/protobuf/poll";
 
-message Form{
-    string ID = 1;
-    string PollID = 2;
-    uint64 FieldID = 3;
-    bool Anonim = 4;
-    string UserID = 5; 
+import "google/protobuf/timestamp.proto";
+
+message Field {
+  uint32 id = 1;
+  string poll_id = 2; // uuid как строка
+  string desc = 3;
+  float procent = 4;
+}
+
+// Аналог структуры Poll из Go
+message Poll {
+  string id = 1; // uuid как строка
+  google.protobuf.Timestamp created_at = 2;
+  string author_id = 3;
+  string desc = 4;
+  repeated Field fields = 5;
+  bool limited_for_time = 6;
+  google.protobuf.Timestamp delete_in = 7;
+  bool closed = 8;
 }
 
 message RequestGet{
@@ -30,7 +43,7 @@ message RequestDelete{
 }
 
 message RequestCreate{
-    Form Form = 1;
+    Poll Form = 1;
 }
 
 message RequestGetMore{
@@ -40,12 +53,12 @@ message RequestGetMore{
 
 message GetResponse{
     Response Response = 1;
-    Form Form = 2;
+    Poll Poll = 2;
 }
 
 message GetMoreResponse{
     Response Response = 1;
-    repeated Form Forms = 2;
+    repeated Poll Forms = 2;
 }
 
 service PollService{
