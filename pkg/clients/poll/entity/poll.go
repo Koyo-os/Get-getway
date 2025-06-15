@@ -9,18 +9,18 @@ import (
 )
 
 type Field struct {
-	ID      uint      `gorm:"primaryKey;autoIncrement"`
-	PollID  uuid.UUID `gorm:"type:uuid"`
+	ID      uint `json:"id"`
+	PollID  uuid.UUID `json:"poll_id"`
 	Desc    string    `json:"desc"`
 	Procent float32   `json:"procent"`
 }
 
 type Poll struct {
-	ID             uuid.UUID `json:"id"         gorm:"primaryKey"`
+	ID             uuid.UUID `json:"id"`
 	CreatedAt      time.Time `json:"created_at"`
 	AuthorID       string    `json:"author_id"`
 	Desc           string    `json:"desc"`
-	Fields         []Field   `json:"fields"     gorm:"foreignKey:PollID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
+	Fields         []Field   `json:"fields"`
 	LimitedForTime bool      `json:"limited_for_time"`
 	DeleteIn       time.Time `json:"delete_in"`
 	Closed         bool      `json:"closed"`
@@ -54,9 +54,42 @@ func (p *Poll) ToProtobuf() *poll.Poll {
 	}
 }
 
+func ToEntityField(field *poll.Field) (*Field, error) {
+	pollID, err := uuid.Parse(field.PollId)
+	if err != nil{
+		return nil, err
+	}
+
+	return &Field{
+		ID: uint(field.Id),
+		Procent: field.Procent,
+		PollID: pollID,
+	}, nil
+}
+
 func ToEntityPoll(poll *poll.Poll) (*Poll, error) {
-	id, err := uuid.Parse(poll.ID)
+	id, err := uuid.Parse(poll.Id)
 	if err != nil {
 		return nil, err
 	}
+
+	fields := make([]Field, len(poll.Fields))
+
+	for i, f := range poll.Fields{
+		field, err := ToEntityField(f)
+		if err != nil{
+			continue
+		}
+
+		fields[i] = *field
+	}
+
+	return &Poll{
+		Fields: fields,
+		ID: id,
+		AuthorID: poll.AuthorId,
+		Desc: poll.AuthorId,
+		CreatedAt: poll.CreatedAt.AsTime(),
+		DeleteIn: poll.DeleteIn.AsTime(),
+	}, nil
 }
