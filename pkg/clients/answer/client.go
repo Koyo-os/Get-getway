@@ -113,7 +113,7 @@ func (a *AnswerClient) Get(id string) (*entity.Answer, error) {
 	return answer, nil
 }
 
-func (a *AnswerClient) GetMore(key, value string) error {
+func (a *AnswerClient) GetMore(key, value string) ([]entity.Answer, error) {
 	ctx, cancel := a.context()
 	defer cancel()
 
@@ -127,16 +127,16 @@ func (a *AnswerClient) GetMore(key, value string) error {
 			zap.String("value", value),
 			zap.Error(err))
 
-		return err
+		return nil, err
 	}
 
 	if !resp.Response.Ok {
 		a.logger.Error("error from response", zap.String("error", resp.Response.Error))
 
-		return errors.New(resp.Response.Error)
+		return nil, errors.New(resp.Response.Error)
 	}
 
-	answers := make([]*entity.Answer, len(resp.Answers))
+	answers := make([]entity.Answer, len(resp.Answers))
 
 	for i, ans := range resp.Answers {
 		entityAnswer, err := entity.ToEntityAnswer(ans)
@@ -144,10 +144,10 @@ func (a *AnswerClient) GetMore(key, value string) error {
 			continue
 		}
 
-		answers[i] = entityAnswer
+		answers[i] = *entityAnswer
 	}
 
-	return nil
+	return answers, nil
 }
 
 func (a *AnswerClient) Delete(id string) error {
