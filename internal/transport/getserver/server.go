@@ -102,14 +102,20 @@ func (g *GetServer) GetRealTime(req *get.GetRealTimeRequest, resp grpc.ServerStr
 			continue
 		}
 	}
+
+	return nil
 }
 
 // mustEmbedUnimplementedGetServiceServer implements get.GetServiceServer.
 
-func NewGetServer(addr string) (*GetServer, error) {
-	logger := logger.Get()
-
+func NewGetServer(core *core.GetServiceCore) *GetServer {
 	server := grpc.NewServer()
 
 	get.RegisterGetServiceServer(server, &GetServer{})
+
+	return &GetServer{
+		logger: logger.Get(),
+		server: server,
+		core: core,
+	}
 }
