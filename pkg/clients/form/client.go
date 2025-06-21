@@ -107,12 +107,12 @@ func (f *FormClient) Get(id string) (*entity.Form, error) {
 	return form, nil
 }
 
-func (f *FormClient) GetMore(key,value string) ([]entity.Form, error) {
+func (f *FormClient) GetMore(key, value string) ([]entity.Form, error) {
 	ctx, cancel := f.context()
 	defer cancel()
 
 	resp, err := f.client.GetMore(ctx, &formpb.RequestGetMore{
-		Key: key,
+		Key:   key,
 		Value: value,
 	})
 	if err != nil {
@@ -132,9 +132,31 @@ func (f *FormClient) GetMore(key,value string) ([]entity.Form, error) {
 
 	forms := make([]entity.Form, len(resp.Forms))
 
-	for i, f := range resp.Forms{
+	for i, f := range resp.Forms {
 		forms[i] = *entity.ToEntityForm(f)
 	}
 
 	return forms, nil
+}
+
+func (f *FormClient) Delete(id string) error {
+	ctx, cancel := f.context()
+	defer cancel()
+
+	resp, err := f.client.Delete(ctx, &formpb.RequestDelete{
+		ID: id,
+	})
+	if err != nil {
+		f.logger.Error("error delete form",
+			zap.String("id", id),
+			zap.Error(err))
+
+		return err
+	}
+
+	if !resp.Ok {
+		f.logger.Error("error from request", zap.Error(err))
+	}
+
+	return nil
 }
