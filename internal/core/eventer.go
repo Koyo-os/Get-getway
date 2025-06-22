@@ -1,6 +1,7 @@
 package core
 
 import (
+	"errors"
 	"strings"
 
 	"github.com/Koyo-os/get-getway/internal/entity"
@@ -27,7 +28,7 @@ func route[T any](client Client[T], eventType string, payload string) error {
 		}
 
 		return client.Create(req.Payload)
-	case "update":
+	case "updated":
 		var req entity.Update
 
 		if err := sonic.Unmarshal([]byte(payload), &req);err != nil{
@@ -35,5 +36,15 @@ func route[T any](client Client[T], eventType string, payload string) error {
 		}
 
 		return client.Update(req.ID, req.Key, req.Value)
+	case "deleted":
+		var req entity.Delete
+
+		if err := sonic.Unmarshal([]byte(payload), &req);err != nil{
+			return err
+		}
+
+		return client.Delete(req.ID)
+	default:
+		return errors.New("unknown event type")
 	}
 }
