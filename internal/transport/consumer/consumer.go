@@ -1,6 +1,7 @@
 package consumer
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"sync"
@@ -21,20 +22,20 @@ const (
 
 // Consumer handles connections to RabbitMQ, manages multiple queues, and processes messages from them.
 type Consumer struct {
-	conn         *amqp.Connection      // RabbitMQ connection
-	channel      *amqp.Channel         // Channel for communication with RabbitMQ
-	logger       *logger.Logger        // Application logger
-	cfg          *config.Config        // Application configuration
-	exchanges    map[string]bool       // Set of declared exchanges
-	queues       map[string]bool       // Set of declared queues
-	mu           sync.RWMutex          // Mutex for concurrent access to Consumer fields
-	isConnected  bool                  // Indicates if the consumer is currently connected
-	reconnecting bool                  // Indicates if a reconnection is in progress
-	stopCh       chan struct{}         // Channel to signal goroutines to stop
+	conn         *amqp.Connection // RabbitMQ connection
+	channel      *amqp.Channel    // Channel for communication with RabbitMQ
+	logger       *logger.Logger   // Application logger
+	cfg          *config.Config   // Application configuration
+	exchanges    map[string]bool  // Set of declared exchanges
+	queues       map[string]bool  // Set of declared queues
+	mu           sync.RWMutex     // Mutex for concurrent access to Consumer fields
+	isConnected  bool             // Indicates if the consumer is currently connected
+	reconnecting bool             // Indicates if a reconnection is in progress
+	stopCh       chan struct{}    // Channel to signal goroutines to stop
 }
 
 // Init creates and initializes a Consumer, subscribing to all queues defined in the config.
-func Init(cfg *config.Config, logger *logger.Logger, conn *amqp.Connection) (*Consumer, error) {
+func NewConsumer(cfg *config.Config, logger *logger.Logger, conn *amqp.Connection) (*Consumer, error) {
 	if cfg == nil || logger == nil || conn == nil {
 		return nil, fmt.Errorf("invalid parameters: cfg, logger, and conn cannot be nil")
 	}
@@ -184,40 +185,46 @@ func (c *Consumer) IsHealthy() bool {
 
 // ConsumeMessages starts processing messages from all queues.
 // For each queue, a separate goroutine is started to consume messages.
-func (c *Consumer) ConsumeMessages(outputChan chan entity.Event) {
+func (c *Consumer) ConsumeMessages(outputChan chan entity.Event, ctx context.Context) {
 	if outputChan == nil {
 		c.logger.Error("output channel cannot be nil")
 		return
 	}
 
 	for {
-		if !c.IsHealthy() {
-			c.logger.Warn("connection is unhealthy, attempting to reconnect...")
-			if err := c.handleReconnection(); err != nil {
-				c.logger.Error("failed to reconnect", zap.Error(err))
+		select{
+		case <- ctx.Done():
+			c.logger.Info("consumer stopped")
+			return
+		default:
+			if !c.IsHealthy() {
+				c.logger.Warn("connection is unhealthy, attempting to reconnect...")
+				if err := c.handleReconnection(); err != nil {
+					c.logger.Error("failed to reconnect", zap.Error(err))
+					time.Sleep(DEFAULT_RECONNECT_DELAY)
+					continue
+				}
+			}
+	
+			if err := c.rebindExchangesAndQueues(); err != nil {
+				c.logger.Error("failed to rebind exchanges/queues", zap.Error(err))
 				time.Sleep(DEFAULT_RECONNECT_DELAY)
 				continue
 			}
-		}
-
-		if err := c.rebindExchangesAndQueues(); err != nil {
-			c.logger.Error("failed to rebind exchanges/queues", zap.Error(err))
+	
+			var wg sync.WaitGroup
+			for queueName := range c.queues {
+				wg.Add(1)
+				go func(q string) {
+					defer wg.Done()
+					if err := c.startConsuming(q, outputChan); err != nil {
+						c.logger.Error("consuming stopped with error", zap.String("queue", q), zap.Error(err))
+					}
+				}(queueName)
+			}
+			wg.Wait()
 			time.Sleep(DEFAULT_RECONNECT_DELAY)
-			continue
 		}
-
-		var wg sync.WaitGroup
-		for queueName := range c.queues {
-			wg.Add(1)
-			go func(q string) {
-				defer wg.Done()
-				if err := c.startConsuming(q, outputChan); err != nil {
-					c.logger.Error("consuming stopped with error", zap.String("queue", q), zap.Error(err))
-				}
-			}(queueName)
-		}
-		wg.Wait()
-		time.Sleep(DEFAULT_RECONNECT_DELAY)
 	}
 }
 
