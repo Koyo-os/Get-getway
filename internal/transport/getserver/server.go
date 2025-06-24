@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net"
 
 	"github.com/Koyo-os/get-getway/internal/core"
 	"github.com/Koyo-os/get-getway/pkg/api/protobuf/get"
@@ -80,23 +81,23 @@ func (g *GetServer) Get(ctx context.Context, req *get.GetRequest) (*get.GetRespo
 
 // GetRealTime implements get.GetServiceServer.
 func (g *GetServer) GetRealTime(req *get.GetRealTimeRequest, resp grpc.ServerStreamingServer[get.GetResponse]) error {
-	if req == nil{
+	if req == nil {
 		return errors.New("request is nil")
 	}
-	
+
 	respChan, err := g.core.RouteGetRealTimeRequest(req.Payload, req.EntityName)
-	if err != nil{
+	if err != nil {
 		return fmt.Errorf("error route real-time request: %v", err)
 	}
 
-	for r := range respChan{
+	for r := range respChan {
 		if err = resp.Send(&get.GetResponse{
 			Response: &get.Response{
-				Ok: true,
+				Ok:    true,
 				Error: "",
 			},
 			Entities: []string{r},
-		});err != nil{
+		}); err != nil {
 			g.logger.Error("failed send entity", zap.Error(err))
 
 			continue
@@ -116,6 +117,29 @@ func NewGetServer(core *core.GetServiceCore) *GetServer {
 	return &GetServer{
 		logger: logger.Get(),
 		server: server,
-		core: core,
+		core:   core,
 	}
+}
+
+func (g *GetServer) Run(ctx context.Context, addr string) error {
+	lis, err := net.Listen("tcp", addr)
+	if err != nil {
+		g.logger.Error("error listen",
+			zap.String("addr", addr),
+			zap.Error(err))
+
+		return err
+	}
+
+	if err = g.server.Serve(lis); err != nil {
+		g.logger.Error("error serve",
+			zap.String("addr", addr),
+			zap.Error(err))
+
+		return err
+	}
+
+	g.logger.Info("grpc get-server started on", zap.String("addr", addr))
+
+	return nil
 }
