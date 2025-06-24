@@ -10,7 +10,7 @@ import (
 
 type Entity any
 
-type Client[T Entity] interface{
+type Client[T Entity] interface {
 	Create(T) error
 	Update(string, string, string) error
 	Delete(string) error
@@ -19,11 +19,11 @@ type Client[T Entity] interface{
 func route[T any](client Client[T], eventType string, payload string) error {
 	lastPart := strings.Split(eventType, ".")[1]
 
-	switch lastPart{
+	switch lastPart {
 	case "created":
 		var req entity.Create[T]
 
-		if err := sonic.Unmarshal([]byte(payload), &req);err != nil{
+		if err := sonic.Unmarshal([]byte(payload), &req); err != nil {
 			return err
 		}
 
@@ -31,7 +31,7 @@ func route[T any](client Client[T], eventType string, payload string) error {
 	case "updated":
 		var req entity.Update
 
-		if err := sonic.Unmarshal([]byte(payload), &req);err != nil{
+		if err := sonic.Unmarshal([]byte(payload), &req); err != nil {
 			return err
 		}
 
@@ -39,7 +39,7 @@ func route[T any](client Client[T], eventType string, payload string) error {
 	case "deleted":
 		var req entity.Delete
 
-		if err := sonic.Unmarshal([]byte(payload), &req);err != nil{
+		if err := sonic.Unmarshal([]byte(payload), &req); err != nil {
 			return err
 		}
 
