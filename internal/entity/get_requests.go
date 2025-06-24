@@ -15,13 +15,13 @@ type (
 		Payload T `json:"payload"`
 	}
 
-	Update struct{
-		ID string `json:"id"`
-		Key string `json:"key"`
+	Update struct {
+		ID    string `json:"id"`
+		Key   string `json:"key"`
 		Value string `json:"value"`
 	}
 
-	Delete struct{
+	Delete struct {
 		ID string `json:"id"`
 	}
 )
