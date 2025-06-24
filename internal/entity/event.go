@@ -21,4 +21,3 @@ func NewEvent(Type string, payload []byte) *Event {
 		Timestamp: time.Now(),
 	}
 }
-
