@@ -43,24 +43,24 @@ func ConnectToServices(
 	urls map[string]string,
 ) (*Connection, error) {
 	conn := &Connection{}
-	
+
 	for entity, url := range urls {
 		cc, err := grpc.NewClient(url)
-		if err != nil{
+		if err != nil {
 			return nil, err
 		}
 
-		switch entity{	
+		switch entity {
 		case "answer":
-			conn.answerClient = answer.NewAnswerClient(cc, 20 * time.Second)
+			conn.answerClient = answer.NewAnswerClient(cc, 20*time.Second)
 		case "poll":
-			conn.formClient = form.NewFormClient(cc, 20 * time.Second)
+			conn.formClient = form.NewFormClient(cc, 20*time.Second)
 		case "vote":
-			conn.voteClient = vote.NewVoteClient(cc, 20 * time.Second)
+			conn.voteClient = vote.NewVoteClient(cc, 20*time.Second)
 		case "form":
-			conn.formClient = form.NewFormClient(cc, 20 * time.Second)
+			conn.formClient = form.NewFormClient(cc, 20*time.Second)
 		default:
-			continue 
+			continue
 		}
 	}
 
