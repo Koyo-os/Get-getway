@@ -108,8 +108,8 @@ func (p *PollClient) Update(id, key, value string) error {
 	defer cancel()
 
 	resp, err := p.client.Update(ctx, &pollpb.RequestUpdate{
-		ID:   id,
-		Key:  key,
+		ID:    id,
+		Key:   key,
 		Value: value,
 	})
 	if err != nil {
