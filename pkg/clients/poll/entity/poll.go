@@ -9,7 +9,7 @@ import (
 )
 
 type Field struct {
-	ID      uint `json:"id"`
+	ID      uint      `json:"id"`
 	PollID  uuid.UUID `json:"poll_id"`
 	Desc    string    `json:"desc"`
 	Procent float32   `json:"procent"`
@@ -28,9 +28,9 @@ type Poll struct {
 
 func (f *Field) ToProtobuf() *poll.Field {
 	return &poll.Field{
-		Id:     uint32(f.ID),
-		PollId: f.PollID.String(),
-		Desc: f.Desc,
+		Id:      uint32(f.ID),
+		PollId:  f.PollID.String(),
+		Desc:    f.Desc,
 		Procent: f.Procent,
 	}
 }
@@ -38,32 +38,32 @@ func (f *Field) ToProtobuf() *poll.Field {
 func (p *Poll) ToProtobuf() *poll.Poll {
 	fields := make([]*poll.Field, len(p.Fields))
 
-	for i, f := range p.Fields{
+	for i, f := range p.Fields {
 		fields[i] = f.ToProtobuf()
 	}
 
 	return &poll.Poll{
-		Id: p.ID.String(),
-		CreatedAt: timestamppb.New(p.CreatedAt),
-		Desc: p.Desc,
-		DeleteIn: timestamppb.New(p.DeleteIn),
-		AuthorId: p.AuthorID,
-		Fields: fields,
+		Id:             p.ID.String(),
+		CreatedAt:      timestamppb.New(p.CreatedAt),
+		Desc:           p.Desc,
+		DeleteIn:       timestamppb.New(p.DeleteIn),
+		AuthorId:       p.AuthorID,
+		Fields:         fields,
 		LimitedForTime: p.LimitedForTime,
-		Closed: p.Closed,
+		Closed:         p.Closed,
 	}
 }
 
 func ToEntityField(field *poll.Field) (*Field, error) {
 	pollID, err := uuid.Parse(field.PollId)
-	if err != nil{
+	if err != nil {
 		return nil, err
 	}
 
 	return &Field{
-		ID: uint(field.Id),
+		ID:      uint(field.Id),
 		Procent: field.Procent,
-		PollID: pollID,
+		PollID:  pollID,
 	}, nil
 }
 
@@ -75,9 +75,9 @@ func ToEntityPoll(poll *poll.Poll) (*Poll, error) {
 
 	fields := make([]Field, len(poll.Fields))
 
-	for i, f := range poll.Fields{
+	for i, f := range poll.Fields {
 		field, err := ToEntityField(f)
-		if err != nil{
+		if err != nil {
 			continue
 		}
 
@@ -85,11 +85,11 @@ func ToEntityPoll(poll *poll.Poll) (*Poll, error) {
 	}
 
 	return &Poll{
-		Fields: fields,
-		ID: id,
-		AuthorID: poll.AuthorId,
-		Desc: poll.AuthorId,
+		Fields:    fields,
+		ID:        id,
+		AuthorID:  poll.AuthorId,
+		Desc:      poll.AuthorId,
 		CreatedAt: poll.CreatedAt.AsTime(),
-		DeleteIn: poll.DeleteIn.AsTime(),
+		DeleteIn:  poll.DeleteIn.AsTime(),
 	}, nil
 }
