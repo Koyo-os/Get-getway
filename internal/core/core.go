@@ -204,7 +204,7 @@ func (g *GetServiceCore) RouteGetRealTimeRequest(payload, entityType string) (ch
 
 	switch entityType {
 	case "vote":
-		resp, err := g.vote.Get(context.Background(), req.ID)
+		resp, err := g.vote.GetByPollID(context.Background(), req.ID)
 		if err != nil {
 			return respChan, fmt.Errorf("error get realtime for vote: %v", err)
 		}
